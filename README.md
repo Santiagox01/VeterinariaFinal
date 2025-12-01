@@ -73,7 +73,7 @@ VeterinariaFinal es una aplicacion de una sola pagina (SPA) desarrollada con Rea
 
 El panel principal muestra un resumen del inventario:
 - Total de productos activos
-- Valor total del inventario en MXN
+- Valor total del inventario en COP
 - Cantidad de productos con stock bajo (menos de 5 unidades)
 - Numero de categorias de productos
 - Lista de los 5 productos mas recientes
@@ -147,7 +147,7 @@ La aplicacion utiliza Supabase como backend con las siguientes tablas:
 - `id` - Identificador unico (formato: ACC001, ACC002, etc.)
 - `nombre` - Nombre del producto
 - `tipo` - Categoria del producto
-- `precio` - Precio en MXN
+- `precio` - Precio en COP
 - `stock` - Cantidad disponible
 - `activo` - Estado del producto (activo/inactivo)
 - `fecha_creacion` - Fecha de creacion
