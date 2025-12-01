@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Printer, X } from "lucide-react";
+import { jsPDF } from "jspdf";
 import type { SaleWithItems } from "@/lib/sales";
 
 interface InvoiceProps {
@@ -38,26 +39,147 @@ export default function Invoice({ sale, onClose }: InvoiceProps) {
   };
 
   const handleDownload = () => {
-    const element = invoiceRef.current;
-    if (!element) return;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    const canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 1000;
-    const ctx = canvas.getContext("2d");
+    // Header background
+    doc.setFillColor(34, 197, 94); // Green color
+    doc.rect(0, 0, pageWidth, 45, 'F');
 
-    if (ctx) {
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(0, 0, 800, 1000);
-      ctx.fillStyle = "#000000";
-      ctx.font = "bold 24px Arial";
-      ctx.fillText("FACTURA", 50, 50);
+    // Company name
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont("helvetica", "bold");
+    doc.text("FACTURA", pageWidth / 2, 22, { align: "center" });
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "normal");
+    doc.text("Accesorios Veterinaria", pageWidth / 2, 35, { align: "center" });
 
-      const link = document.createElement("a");
-      link.href = canvas.toDataURL("image/png");
-      link.download = `factura-${sale.id}.png`;
-      link.click();
-    }
+    // Reset text color
+    doc.setTextColor(0, 0, 0);
+
+    // Invoice info section
+    let yPos = 60;
+
+    // Left side - Invoice number and date
+    doc.setFontSize(10);
+    doc.setTextColor(107, 114, 128); // Gray
+    doc.text("NÚMERO DE FACTURA", 20, yPos);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(sale.id, 20, yPos + 7);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(107, 114, 128);
+    doc.text("FECHA", 20, yPos + 20);
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    doc.text(formatDate(sale.fecha_venta), 20, yPos + 27);
+
+    // Right side - Customer
+    doc.setFontSize(10);
+    doc.setTextColor(107, 114, 128);
+    doc.text("CLIENTE", pageWidth - 20, yPos, { align: "right" });
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(sale.cliente, pageWidth - 20, yPos + 7, { align: "right" });
+
+    // Divider line
+    yPos = 105;
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    // Table header
+    yPos = 115;
+    doc.setFillColor(249, 250, 251); // Light gray background
+    doc.rect(20, yPos - 5, pageWidth - 40, 12, 'F');
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(55, 65, 81);
+    doc.text("Producto", 25, yPos + 3);
+    doc.text("Cant.", 100, yPos + 3, { align: "center" });
+    doc.text("Precio Unit.", 140, yPos + 3, { align: "right" });
+    doc.text("Subtotal", pageWidth - 25, yPos + 3, { align: "right" });
+
+    // Table rows
+    yPos = 130;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+
+    sale.items.forEach((item, index) => {
+      // Alternate row background
+      if (index % 2 === 0) {
+        doc.setFillColor(255, 255, 255);
+      } else {
+        doc.setFillColor(249, 250, 251);
+      }
+      doc.rect(20, yPos - 5, pageWidth - 40, 12, 'F');
+
+      doc.setFontSize(10);
+      doc.text(item.accesorio_id.substring(0, 25), 25, yPos + 3);
+      doc.text(item.cantidad.toString(), 100, yPos + 3, { align: "center" });
+      doc.text(formatCurrency(item.precio_unitario), 140, yPos + 3, { align: "right" });
+      doc.setFont("helvetica", "bold");
+      doc.text(formatCurrency(item.subtotal), pageWidth - 25, yPos + 3, { align: "right" });
+      doc.setFont("helvetica", "normal");
+
+      yPos += 12;
+    });
+
+    // Divider line before totals
+    yPos += 5;
+    doc.setDrawColor(229, 231, 235);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    // Totals section
+    yPos += 15;
+    const totalsX = pageWidth - 80;
+
+    doc.setFontSize(10);
+    doc.setTextColor(107, 114, 128);
+    doc.text("Subtotal:", totalsX, yPos);
+    doc.setTextColor(0, 0, 0);
+    doc.text(formatCurrency(sale.precio_total), pageWidth - 25, yPos, { align: "right" });
+
+    yPos += 10;
+    doc.setTextColor(107, 114, 128);
+    doc.text("Impuesto:", totalsX, yPos);
+    doc.setTextColor(0, 0, 0);
+    doc.text(formatCurrency(0), pageWidth - 25, yPos, { align: "right" });
+
+    // Total line
+    yPos += 8;
+    doc.setDrawColor(34, 197, 94);
+    doc.setLineWidth(1);
+    doc.line(totalsX - 5, yPos, pageWidth - 20, yPos);
+
+    yPos += 12;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Total:", totalsX, yPos);
+    doc.setTextColor(34, 197, 94); // Green
+    doc.text(formatCurrency(sale.precio_total), pageWidth - 25, yPos, { align: "right" });
+
+    // Footer
+    yPos = 260;
+    doc.setDrawColor(229, 231, 235);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPos, pageWidth - 20, yPos);
+
+    yPos += 15;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(107, 114, 128);
+    doc.text("Gracias por su compra", pageWidth / 2, yPos, { align: "center" });
+    doc.text("Accesorios Veterinaria", pageWidth / 2, yPos + 8, { align: "center" });
+
+    // Save the PDF
+    doc.save(`factura-${sale.id}.pdf`);
   };
 
   return (
@@ -79,7 +201,7 @@ export default function Invoice({ sale, onClose }: InvoiceProps) {
             className="gap-2"
           >
             <Download size={20} />
-            Descargar
+            Descargar PDF
           </Button>
           {onClose && (
             <Button

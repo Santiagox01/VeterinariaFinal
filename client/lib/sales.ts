@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient";
+import { reduceStock } from "./accessories";
 
 export type SaleItem = {
   id: string;
@@ -75,6 +76,11 @@ export async function createSale(
     .select();
 
   if (itemsError) throw itemsError;
+
+  // Reduce stock for each sold item
+  await Promise.all(
+    items.map((item) => reduceStock(item.accesorio_id, item.cantidad))
+  );
 
   return {
     ...saleData,
