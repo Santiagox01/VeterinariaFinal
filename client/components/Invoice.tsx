@@ -13,14 +13,14 @@ export default function Invoice({ sale, onClose }: InvoiceProps) {
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("es-MX", {
+    return new Intl.NumberFormat("es-CO", {
       style: "currency",
-      currency: "MXN",
+      currency: "COP",
     }).format(value);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-MX", {
+    return new Date(dateString).toLocaleDateString("es-CO", {
       year: "numeric",
       month: "long",
       day: "numeric",
