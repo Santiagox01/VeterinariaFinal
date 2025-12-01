@@ -5,6 +5,7 @@ import {
   searchAccessories,
   getAccessoryTypes,
   reduceStock,
+  addStock,
   updateAccessory,
   type Accessory,
 } from "@/lib/accessories";
@@ -20,6 +21,7 @@ import {
   Loader2,
   AlertCircle,
   History,
+  Package,
 } from "lucide-react";
 
 export default function Accessories() {
@@ -36,6 +38,11 @@ export default function Accessories() {
   const [sellQuantity, setSellQuantity] = useState("");
   const [sellError, setSellError] = useState("");
   const [sellingLoading, setSellingLoading] = useState(false);
+  const [showAddStockModal, setShowAddStockModal] = useState(false);
+  const [addStockAccessoryId, setAddStockAccessoryId] = useState<string | null>(null);
+  const [addStockQuantity, setAddStockQuantity] = useState("");
+  const [addStockError, setAddStockError] = useState("");
+  const [addStockLoading, setAddStockLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -125,6 +132,35 @@ export default function Accessories() {
       );
     } finally {
       setSellingLoading(false);
+    }
+  };
+
+  const handleAddStock = async () => {
+    if (!addStockAccessoryId || !addStockQuantity) {
+      setAddStockError("Ingrese la cantidad a agregar");
+      return;
+    }
+
+    const quantity = parseInt(addStockQuantity);
+    if (isNaN(quantity) || quantity <= 0) {
+      setAddStockError("La cantidad debe ser un numero positivo");
+      return;
+    }
+
+    try {
+      setAddStockLoading(true);
+      await addStock(addStockAccessoryId, quantity);
+      setAddStockError("");
+      setShowAddStockModal(false);
+      setAddStockAccessoryId(null);
+      setAddStockQuantity("");
+      loadData();
+    } catch (error) {
+      setAddStockError(
+        error instanceof Error ? error.message : "Error al agregar stock"
+      );
+    } finally {
+      setAddStockLoading(false);
     }
   };
 
@@ -296,6 +332,80 @@ export default function Accessories() {
         </div>
       )}
 
+      {/* Modal Agregar Stock */}
+      {showAddStockModal && addStockAccessoryId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Agregar Stock
+            </h2>
+
+            {addStockError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 mb-4">
+                <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+                <p className="text-red-700 text-sm">{addStockError}</p>
+              </div>
+            )}
+
+            <div className="mb-4">
+              <p className="text-gray-700 mb-3">
+                Producto:{" "}
+                <span className="font-semibold">
+                  {accessories.find((a) => a.id === addStockAccessoryId)?.nombre}
+                </span>
+              </p>
+              <p className="text-gray-600 mb-4">
+                Stock actual:{" "}
+                <span className="font-semibold">
+                  {accessories.find((a) => a.id === addStockAccessoryId)?.stock}{" "}
+                  unidades
+                </span>
+              </p>
+
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Cantidad a Agregar
+              </label>
+              <input
+                type="number"
+                value={addStockQuantity}
+                onChange={(e) => {
+                  setAddStockQuantity(e.target.value);
+                  setAddStockError("");
+                }}
+                min="1"
+                placeholder="Ingrese cantidad"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                disabled={addStockLoading}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAddStockModal(false);
+                  setAddStockAccessoryId(null);
+                  setAddStockQuantity("");
+                  setAddStockError("");
+                }}
+                disabled={addStockLoading}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleAddStock}
+                disabled={addStockLoading}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                {addStockLoading && <Loader2 className="animate-spin mr-2" size={20} />}
+                Agregar Stock
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Search and Filter */}
@@ -396,7 +506,8 @@ export default function Accessories() {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
                         setEditingAccessory(accessory);
                         setShowForm(true);
                       }}
@@ -406,7 +517,21 @@ export default function Accessories() {
                       Editar
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setAddStockAccessoryId(accessory.id);
+                        setShowAddStockModal(true);
+                        setAddStockQuantity("");
+                        setAddStockError("");
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 bg-purple-100 hover:bg-purple-200 text-purple-700 font-medium py-2 rounded-lg transition"
+                    >
+                      <Package size={16} />
+                      Stock
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
                         setSellAccessoryId(accessory.id);
                         setShowSellModal(true);
                         setSellQuantity("");

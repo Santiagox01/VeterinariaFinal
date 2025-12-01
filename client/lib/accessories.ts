@@ -89,6 +89,30 @@ export async function reduceStock(id: string, quantity: number): Promise<Accesso
   return data;
 }
 
+export async function addStock(id: string, quantity: number): Promise<Accessory> {
+  const { data: accessory, error: fetchError } = await supabase
+    .from("accesorios")
+    .select("stock")
+    .eq("id", id)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const newStock = (accessory?.stock || 0) + quantity;
+
+  const { data, error } = await supabase
+    .from("accesorios")
+    .update({
+      stock: newStock,
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function getAccessoryTypes(): Promise<string[]> {
   const { data, error } = await supabase
     .from("accesorios")
