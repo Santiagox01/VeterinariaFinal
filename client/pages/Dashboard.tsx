@@ -47,7 +47,31 @@ export default function Dashboard() {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
       currency: "COP",
+      maximumFractionDigits: 0,
     }).format(value);
+  };
+
+  // Format currency in compact notation for large values (e.g., $1.2M)
+  const formatCurrencyCompact = (value: number) => {
+    if (value >= 1000000) {
+      return new Intl.NumberFormat("es-CO", {
+        style: "currency",
+        currency: "COP",
+        notation: "compact",
+        compactDisplay: "short",
+        maximumFractionDigits: 1,
+      }).format(value);
+    }
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  // Format number with thousand separators
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat("es-CO").format(value);
   };
 
   return (
@@ -90,72 +114,84 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
           {/* Total Products */}
-          <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8 border border-blue-100">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
+          <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-5 md:p-6 lg:p-8 border border-blue-100 overflow-hidden">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-gray-600 text-xs md:text-sm font-medium">
                   Productos Totales
                 </p>
-                <p className="text-4xl font-bold text-gray-900 mt-2">
-                  {stats.totalProducts}
+                <p
+                  className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mt-2 truncate"
+                  title={formatNumber(stats.totalProducts)}
+                >
+                  {formatNumber(stats.totalProducts)}
                 </p>
               </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <Package className="text-blue-600" size={24} />
+              <div className="bg-blue-100 p-2 md:p-3 rounded-lg flex-shrink-0">
+                <Package className="text-blue-600" size={20} />
               </div>
             </div>
           </div>
 
           {/* Inventory Value */}
-          <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8 border border-green-100">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
+          <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-5 md:p-6 lg:p-8 border border-green-100 overflow-hidden">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-gray-600 text-xs md:text-sm font-medium">
                   Valor del Inventario
                 </p>
-                <p className="text-4xl font-bold text-gray-900 mt-2">
-                  {formatCurrency(stats.totalValue)}
+                <p
+                  className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mt-2 truncate"
+                  title={formatCurrency(stats.totalValue)}
+                >
+                  {formatCurrencyCompact(stats.totalValue)}
                 </p>
               </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <TrendingUp className="text-green-600" size={24} />
+              <div className="bg-green-100 p-2 md:p-3 rounded-lg flex-shrink-0">
+                <TrendingUp className="text-green-600" size={20} />
               </div>
             </div>
           </div>
 
           {/* Low Stock Items */}
-          <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8 border border-orange-100">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
+          <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-5 md:p-6 lg:p-8 border border-orange-100 overflow-hidden">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-gray-600 text-xs md:text-sm font-medium">
                   Productos Bajos
                 </p>
-                <p className="text-4xl font-bold text-gray-900 mt-2">
-                  {stats.lowStockCount}
+                <p
+                  className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mt-2 truncate"
+                  title={formatNumber(stats.lowStockCount)}
+                >
+                  {formatNumber(stats.lowStockCount)}
                 </p>
                 <p className="text-xs text-orange-600 mt-1">(menos de 5 unidades)</p>
               </div>
-              <div className="bg-orange-100 p-3 rounded-lg">
-                <AlertCircle className="text-orange-600" size={24} />
+              <div className="bg-orange-100 p-2 md:p-3 rounded-lg flex-shrink-0">
+                <AlertCircle className="text-orange-600" size={20} />
               </div>
             </div>
           </div>
 
           {/* Categories */}
-          <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8 border border-purple-100">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">
+          <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-5 md:p-6 lg:p-8 border border-purple-100 overflow-hidden">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-gray-600 text-xs md:text-sm font-medium">
                   Categorías
                 </p>
-                <p className="text-4xl font-bold text-gray-900 mt-2">
-                  {stats.types}
+                <p
+                  className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mt-2 truncate"
+                  title={formatNumber(stats.types)}
+                >
+                  {formatNumber(stats.types)}
                 </p>
               </div>
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <Grid2X2 className="text-purple-600" size={24} />
+              <div className="bg-purple-100 p-2 md:p-3 rounded-lg flex-shrink-0">
+                <Grid2X2 className="text-purple-600" size={20} />
               </div>
             </div>
           </div>
