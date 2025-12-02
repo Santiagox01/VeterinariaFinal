@@ -81,9 +81,25 @@ export default function Accessories() {
     }
   };
 
-  const handleTypeFilter = (type: string) => {
+  const handleTypeFilter = async (type: string) => {
     setSelectedType(type);
-    applyFilter(type, filteredAccessories);
+
+    // Determine the correct source data based on search query
+    let sourceData: Accessory[];
+    if (searchQuery.trim()) {
+      // If there's a search query, filter from search results
+      try {
+        sourceData = await searchAccessories(searchQuery);
+      } catch (error) {
+        console.error("Error searching:", error);
+        sourceData = accessories;
+      }
+    } else {
+      // If no search query, use the full accessories list
+      sourceData = accessories;
+    }
+
+    applyFilter(type, sourceData);
   };
 
   const applyFilter = (type: string, sourceData: Accessory[]) => {
