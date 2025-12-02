@@ -2,6 +2,60 @@
 
 Sistema de gestion de inventario y punto de venta para accesorios veterinarios. Esta aplicacion web permite administrar productos, controlar stock, procesar ventas y generar facturas en formato PDF.
 
+## Arquitectura
+
+La aplicacion sigue una arquitectura **SPA (Single Page Application)** con separacion de responsabilidades:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Cliente (Browser)                        │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │   Pages     │  │ Components  │  │      UI Components      │  │
+│  │ (Dashboard, │  │ (Forms,     │  │   (Radix UI + Custom)   │  │
+│  │  Sales...)  │  │  Invoice)   │  │                         │  │
+│  └──────┬──────┘  └──────┬──────┘  └───────────────────────┬─┘  │
+│         │                │                                  │    │
+│         └────────────────┴──────────────────────────────────┘    │
+│                                    │                             │
+│  ┌─────────────────────────────────┴───────────────────────────┐ │
+│  │                    React Query (TanStack)                   │ │
+│  │              Cache, Sincronizacion, Estado Servidor         │ │
+│  └─────────────────────────────────┬───────────────────────────┘ │
+│                                    │                             │
+│  ┌─────────────────────────────────┴───────────────────────────┐ │
+│  │                     Capa de Servicios                       │ │
+│  │          (accessories.ts, sales.ts, utils.ts)               │ │
+│  └─────────────────────────────────┬───────────────────────────┘ │
+└────────────────────────────────────┼─────────────────────────────┘
+                                     │ HTTPS
+                                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         Supabase Cloud                          │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │   PostgreSQL    │  │    REST API     │  │   Row Level     │  │
+│  │    Database     │  │   (Auto-gen)    │  │   Security      │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Patron de Arquitectura
+
+- **Frontend**: Arquitectura basada en componentes con React, siguiendo el patron de presentacion/contenedor
+- **Estado del Servidor**: React Query gestiona el cache, sincronizacion y estado de datos remotos
+- **Capa de Servicios**: Funciones puras en `/client/lib/` que encapsulan las llamadas a Supabase
+- **Backend-as-a-Service**: Supabase proporciona base de datos PostgreSQL, autenticacion y API REST automatica
+- **Enrutamiento**: React Router v6 con rutas declarativas para navegacion SPA
+
+### Flujo de Datos
+
+1. Los componentes de pagina solicitan datos a traves de hooks de React Query
+2. React Query verifica el cache antes de hacer peticiones a la capa de servicios
+3. La capa de servicios ejecuta operaciones CRUD contra Supabase
+4. Supabase aplica politicas RLS y retorna los datos
+5. React Query actualiza el cache y los componentes se re-renderizan
+
 ## Descripcion General
 
 VeterinariaFinal es una aplicacion de una sola pagina (SPA) desarrollada con React y TypeScript que proporciona una solucion completa para la gestion de inventario de accesorios veterinarios. La aplicacion incluye funcionalidades para:
